@@ -1,0 +1,51 @@
+#!/usr/bin/env node
+// 交互式命令行
+const inquirer = require('inquirer')
+// 修改控制台字符串的样式
+const chalk = require('chalk')
+// node 内置文件模块
+const fs = require('fs')
+// 读取根目录下的 template.json
+const tplObj = require(`${__dirname}/../template`)
+
+// 自定义交互式命令行的问题及简单的校验
+let question = [
+  {
+    name:"name",
+    type:'input',
+    message:'请输出模板名称',
+    validate (val) {
+      if (val === '') {
+        return '名字没写！'
+      } else if (tplObj[val]) {
+        return '这个名字已经有了！'
+      } else {
+        return true
+      }
+    }
+
+  },
+  {
+    name: "url",
+    type: 'input',
+    message: "请输入模板地址",
+    validate (val) {
+      if (val === '') return '仓库没写！'
+      return true
+    }
+  }
+]
+
+inquirer.prompt(question).then(answers => {
+  let { name, url } = answers;
+   // 过滤 unicode 字符
+   tplObj[name] = url.replace(/[\u0000-\u0019]/g, '')
+   // 把模板信息写入 template.json 文件中
+   fs.writeFile(`${__dirname}/../template.json`, JSON.stringify(tplObj), 'utf-8', err => {
+    if (err) console.log(err)
+    console.log('\n')
+      console.log(chalk.green('添加成功！\n'))
+      console.log(chalk.grey('现在的模板列表为: \n'))
+      console.log(tplObj)
+   })
+})
